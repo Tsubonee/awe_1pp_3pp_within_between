@@ -1,0 +1,10 @@
+importFrom(boot, boot)
+importFrom(boot, boot.ci)
+importFrom(graphics, plot)
+importFrom(stats, cor)
+importFrom(stats, sd)
+importFrom(stats, var)
+
+export(bootES)
+S3method(print, bootES)
+S3method(summary, bootES)

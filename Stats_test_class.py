@@ -12,7 +12,7 @@ from rpy2 import robjects as R
 from rpy2.robjects.packages import importr
 from rpy2.robjects import pandas2ri, Formula
 from rpy2.robjects.conversion import localconverter
-pandas2ri.activate
+pandas2ri.activate()
 rstatix = importr('rstatix', lib_loc='./r_packages/')
 bootES = importr('bootES', lib_loc='./r_packages/')
 
@@ -31,40 +31,47 @@ class Statistics:
         return(df_sampled)
     
 
-    def test_GLM(self, dataframe, target_variable):
+    def test_GLMM(self, dataframe, target_variable):
     # """
     # A function to run a mixed-effects model and return the results.
 
     # Parameters:
-    # -dataframe (pandas.DataFrame): The dataframe to be analyzed.
-    # -target_variable (str): The target variable for analysis (e.g., 'Awe_S').
-    # Returns:
+    # - dataframe (pandas.DataFrame): The dataframe to be analyzed.
+    # - target_variable (str): The target variable for analysis (e.g., 'Awe_S').
 
-    # tuple: A list of p-values and a significance flag.
+    # Returns:
+    # - tuple: A list of p-values and a significance flag.
     # """
     
-    lme4 = importr('lme4')
-    
-    # Convert a Python DataFrame to an R DataFrame
-    with localconverter(R.default_converter + pandas2ri.converter):
-        r_dataframe = R.conversion.py2rpy(dataframe)
-    
-    formula = Formula(f'{target_variable} ~ Perspective * Scene + (1|ID)')
-    
-    # Create and fit the lme4 model
-    model = lme4.glmer(formula, data=r_dataframe, family='Gamma')
-    
-    # Retrieve the summary results of the model
-    summary = R.summary(model)
-    
-    # Retrieve the summary results of the model
-    fixed_effects = summary.rx2('coefficients')
-    p_values = fixed_effects.rx(True, 4)  
+        # Load lme4 package
+        lme4 = importr('lme4')
+        
+        # Convert a Python DataFrame to an R DataFrame
+        with localconverter(R.default_converter + pandas2ri.converter):
+            r_dataframe = R.conversion.py2rpy(dataframe)
+        
+        # Define the formula for the GLMM
+        formula = Formula(f'{target_variable} ~ Perspective * Scene + (1|ID)')
+        
+        # Fit the GLMM using lme4's glmer function
+        model = lme4.glmer(formula, data=r_dataframe, family=R('Gamma(link="log")'))
+        
+        # Retrieve the summary results of the model
+        summary = R.summary(model)
+        
+        # Extract fixed effects and their p-values
+        fixed_effects = summary.rx2('coefficients')
+        p_values = fixed_effects.rx(True, 4)  # Column 4 corresponds to p-values in R summary
 
-    significant = any(float(p) < 0.05 for p in p_values)
+        # Check if any p-value is significant
+        significant = any(float(p) < 0.05 for p in p_values)
 
-    return p_values, significant
+        return p_values, significant
 
+
+    def GLMM_ef_size(self, dataframe):
+        ef_size = rstatix.wilcox_effsize(data = dataframe, formula = Formula('value ~ Condition'), paired = True)
+        return(ef_size)
         
 
     def testing(self, dataframe):
