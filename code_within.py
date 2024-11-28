@@ -35,9 +35,8 @@ for i in tqdm(range(1, exp), desc="Experiment Progress"):
     try:
         # サンプリングデータの取得
         df_simu = stats.sampling(df_within, parti)
-
         # GLMM の実行
-        p_emb, conf_emb = stats.test_GLMM(df_simu, target_variable='Awe_S')
+        p_emb, conf_emb = stats.test_GLMM(df_simu, target_variable='Awe_S', p_value_index='')
 
         # 結果の出力
         print(f"Experiment {i}: p-values: {p_emb}, Significant: {conf_emb}")

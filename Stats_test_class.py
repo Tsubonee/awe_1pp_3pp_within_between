@@ -12,12 +12,13 @@ from rpy2 import robjects as R
 from rpy2.robjects.packages import importr
 from rpy2.robjects import pandas2ri, Formula
 from rpy2.robjects.conversion import localconverter
+from rpy2.robjects import r
 pandas2ri.activate()
 rstatix = importr('rstatix', lib_loc='./r_packages/')
 bootES = importr('bootES', lib_loc='./r_packages/')
 
 
-
+gamma_family = r('Gamma(link="log")')
 
 class Statistics:
     def __init__(self, nb_participant, nb_exp, dataframe):
@@ -31,42 +32,58 @@ class Statistics:
         return(df_sampled)
     
 
-    def test_GLMM(self, dataframe, target_variable):
-    # """
-    # A function to run a mixed-effects model and return the results.
+    def test_GLMM(self, dataframe, target_variable, p_value_index):
+        """
+        A function to run a mixed-effects model and return the results.
 
-    # Parameters:
-    # - dataframe (pandas.DataFrame): The dataframe to be analyzed.
-    # - target_variable (str): The target variable for analysis (e.g., 'Awe_S').
+        Parameters:
+        - dataframe (pandas.DataFrame): The dataframe to be analyzed.
+        - target_variable (str): The target variable for analysis (e.g., 'Awe_S').
+        - p_value_index (int): The index of the p-value to use (0 for Intercept, 1 for Perspective, etc.).
 
-    # Returns:
-    # - tuple: A list of p-values and a significance flag.
-    # """
-    
+        Returns:
+        - tuple: The selected p-value and a significance flag.
+        """
         # Load lme4 package
         lme4 = importr('lme4')
-        
+
         # Convert a Python DataFrame to an R DataFrame
         with localconverter(R.default_converter + pandas2ri.converter):
             r_dataframe = R.conversion.py2rpy(dataframe)
-        
+
         # Define the formula for the GLMM
         formula = Formula(f'{target_variable} ~ Perspective * Scene + (1|ID)')
-        
-        # Fit the GLMM using lme4's glmer function
-        model = lme4.glmer(formula, data=r_dataframe, family=R('Gamma(link="log")'))
-        
-        # Retrieve the summary results of the model
-        summary = R.summary(model)
-        
-        # Extract fixed effects and their p-values
-        fixed_effects = summary.rx2('coefficients')
-        p_values = fixed_effects.rx(True, 4)  # Column 4 corresponds to p-values in R summary
 
-        # Check if any p-value is significant
-        significant = any(float(p) < 0.05 for p in p_values)
+        print(f"Running GLMM on dataframe with {r_dataframe.nrow} rows and {r_dataframe.ncol} columns")
 
-        return p_values, significant
+        try:
+            # Fit the GLMM using lme4's glmer function
+            model = lme4.glmer(formula, data=r_dataframe, family=gamma_family)
+            summary = r.summary(model)
+
+            # Extract fixed effects
+            fixed_effects = summary.rx2('coefficients')
+
+            # Convert fixed_effects (R matrix) to numpy array
+            with localconverter(R.default_converter + pandas2ri.converter):
+                fixed_effects_df = R.conversion.rpy2py(fixed_effects)
+
+            # Extract all p-values
+            p_values = fixed_effects_df[:, 3]  # Column 4 corresponds to p-values in R summary
+
+            # Select the specified p-value
+            selected_p_value = p_values[p_value_index]
+
+            # Check if the selected p-value is significant
+            significant = selected_p_value < 0.05
+
+            return selected_p_value, significant
+
+        except Exception as e:
+            print(f"Error in GLMM fitting: {e}")
+            return None, False
+
+
 
 
     def GLMM_ef_size(self, dataframe):
