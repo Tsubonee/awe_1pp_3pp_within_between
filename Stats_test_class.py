@@ -26,12 +26,6 @@ class Statistics:
         self.nb_exp = nb_exp
         self.df = dataframe      
 
-
-    def sampling(self, dataframe, nb):
-        df_sampled = dataframe.sample(n = nb)
-        return(df_sampled)
-    
-
     def test_GLMM(self, dataframe, target_variable, p_value_index):
         """
         A function to run a mixed-effects model and return the results.
@@ -54,12 +48,14 @@ class Statistics:
         # Define the formula for the GLMM
         formula = Formula(f'{target_variable} ~ Perspective * Scene + (1|ID)')
 
-        print(f"Running GLMM on dataframe with {r_dataframe.nrow} rows and {r_dataframe.ncol} columns")
+        # print(f"Running GLMM on dataframe with {r_dataframe.nrow} rows and {r_dataframe.ncol} columns")
 
         try:
             # Fit the GLMM using lme4's glmer function
+            gamma_family = r('Gamma(link="inverse")')
             model = lme4.glmer(formula, data=r_dataframe, family=gamma_family)
             summary = r.summary(model)
+            # print(summary)
 
             # Extract fixed effects
             fixed_effects = summary.rx2('coefficients')
@@ -84,12 +80,90 @@ class Statistics:
             return None, False
 
 
+    def sampling(self, dataframe, nb):
+        """
+        Function to perform sampling based on unique IDs.
+        Parameters:
+        - dataframe: pandas.DataFrame, the dataset to be sampled.
+        - nb: int, the number of unique IDs to sample.
+
+        Returns:
+        - pandas.DataFrame, the sampled data containing all rows related to the sampled IDs.
+        """
+        try:
+            # Randomly sample unique IDs
+            sampled_ids = dataframe['ID'].drop_duplicates().sample(n=nb, replace=False)
+            # print(f"Number of sampled IDs: {len(sampled_ids)}")
+            # print(f"Number of unique sampled IDs: {len(set(sampled_ids))}")
+
+            
+            # Extract all rows related to the sampled IDs
+            df_sampled = dataframe[dataframe['ID'].isin(sampled_ids)]
+            # print(f"Sampled DataFrame Dimensions: {df_sampled.shape[0]} rows, {df_sampled.shape[1]} columns")
+            # print(f"Sampled IDs: {sampled_ids.tolist()}")
+            # for id_ in sampled_ids:
+            #     count = len(dataframe[dataframe['ID'] == id_])
+            #     print(f"ID: {id_}, Rows in dataframe: {count}")
 
 
-    def GLMM_ef_size(self, dataframe):
-        ef_size = rstatix.wilcox_effsize(data = dataframe, formula = Formula('value ~ Condition'), paired = True)
-        return(ef_size)
-        
+            # Group by ID and count rows for each ID
+            id_counts = df_sampled.groupby('ID').size()
+
+            # Display each ID and the number of rows associated with it
+            # print("ID and the number of rows associated:")
+            # for id_, count in id_counts.items():
+            #     print(f"ID: {id_}, Count: {count}")
+            # print(f"Unique IDs in dataframe: {dataframe['ID'].nunique()}")
+
+
+            return df_sampled
+        except Exception as e:
+            print(f"Error during sampling: {e}")
+            return None
+
+
+    def prepare_paired_data(self, dataframe, index_value, columns_value):
+        """
+        Prepare paired data for Wilcoxon test.
+        Converts the dataframe to a format where FirstPerson and ThirdPerson data are paired by ID.
+
+        Parameters:
+        - dataframe: pandas.DataFrame, the dataset to be prepared.
+
+        Returns:
+        - pandas.DataFrame, paired data with columns for FirstPerson and ThirdPerson.
+        """
+        try:
+            # Pivot the data to create pairs
+            paired_df = dataframe.pivot(index=["ID",index_value], columns=columns_value, values="Awe_S").reset_index()
+            return paired_df
+        except Exception as e:
+            print(f"Error in preparing paired data: {e}")
+            return None
+
+    def wilcoxon_effect_size(self,paired_df):
+        """
+        Calculate Wilcoxon test and effect size.
+
+        Parameters:
+        - paired_df: pandas.DataFrame, paired data with FirstPerson and ThirdPerson columns.
+
+        Returns:
+        - tuple: (z-value, p-value, effect size)
+        """
+        try:
+            # Perform Wilcoxon signed-rank test
+            z, p_value = sp.stats.wilcoxon(paired_df['FirstPerson'], paired_df['ThirdPerson'])
+
+            # Calculate effect size (r)
+            effect_size = z / np.sqrt(len(paired_df))
+
+            return z, p_value, effect_size
+        except Exception as e:
+            print(f"Error in Wilcoxon test: {e}")
+            return None, None, None
+
+
 
     def testing(self, dataframe):
         z_df, p_df = sp.stats.wilcoxon(dataframe['Synchronous'], dataframe['Asynchronous'])
@@ -112,8 +186,8 @@ class Statistics:
         anova_table = sm.stats.anova_lm(lm, typ=2)
         anova_p_value = anova_table.iat[0,3]
 
-    def reshape(self, dataframe):
-        df2=dataframe.pivot(index='Participant_ID', columns='Condition', values='Embo_Score')
+    def reshape(self, dataframe,target_variable,independent_variable):
+        df2=dataframe.pivot(index='ID', columns=independent_variable, values=target_variable)
         return(df2)
 
     def reshape_long(self, dataframe):
