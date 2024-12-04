@@ -5,6 +5,11 @@
 **First-Person Perspective Induces Stronger Feelings of Awe and Presence Compared to Third-Person Perspective in Virtual Reality**  
 [論文リンクはこちら](https://dl.acm.org/doi/10.1145/3678957.3685753)
 
+論文で使用した主要なコードとデータセットについては、以下のOSFプロジェクトで公開しています：  
+[OSFプロジェクトリンク](https://osf.io/eq9vp/)
+
+このリポジトリには、OSFで公開されているコードを基にした追加解析スクリプトと実験データを収録しています。
+
 ---
 
 ## ファイル構成
