@@ -285,10 +285,10 @@ class Statistics:
         df_long = pd.melt(dataframe, id_vars=['id'], value_vars=['Asynchronous', 'Synchronous'])
         return(df_long)
 
-    def writing(self, file_name, p_value, conformity, ef_size):
+    def writing(self, file_name, p_value, conformity, ef_size, p_value_ipq, conf_emb_ipq):
         with open(file_name, 'a', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow([self.nb_exp, int(self.nb_parti), p_value, conformity, ef_size])
+            writer.writerow([self.nb_exp, int(self.nb_parti), p_value, conformity, ef_size, p_value_ipq, conf_emb_ipq])
 
     def wilcox_ef_size(self, dataframe):
         ef_size = rstatix.wilcox_effsize(data = dataframe, formula = Formula('value ~ Condition'), paired = True)
