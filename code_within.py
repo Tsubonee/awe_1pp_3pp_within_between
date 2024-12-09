@@ -80,7 +80,7 @@ for parti in participant_counts:
         if (df_count.iat[i, 3] == True):
             count += 1
 
-    pourcent = count * 100 / parti
+    pourcent = count * 100 / exp
 
     file_name = 'Pourcentage_Conforme_within.csv'
 
