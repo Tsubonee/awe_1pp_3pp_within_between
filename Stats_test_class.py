@@ -45,6 +45,20 @@ class Statistics:
         with localconverter(R.default_converter + pandas2ri.converter):
             r_dataframe = R.conversion.py2rpy(dataframe)
 
+        try:
+            # Convert Perspective and Scene to factors in R
+            r_dataframe = r('''
+            function(df) {
+                df$Perspective <- as.factor(df$Perspective)
+                df$Scene <- as.factor(df$Scene)
+                return(df)
+            }
+            ''')(r_dataframe)
+        except Exception as e:
+            print(f"Error in converting variables to factors: {e}")
+            return None, False
+
+
         # Define the formula for the GLMM
         formula = Formula(f'{target_variable} ~ Perspective * Scene + (1|ID)')
 
@@ -78,6 +92,82 @@ class Statistics:
         except Exception as e:
             print(f"Error in GLMM fitting: {e}")
             return None, False
+    
+
+    def test_IPQ(self, dataframe, target_variable, p_value_index):
+        """
+        A function to run an Aligned Rank Transform model and return the results.
+
+        Parameters:
+        - dataframe (pandas.DataFrame): The dataframe to be analyzed.
+        - target_variable (str): The target variable for analysis (e.g., 'Mean_IPQ').
+        - p_value_index (int): The index of the p-value to use.
+
+        Returns:
+        - tuple: The selected p-value, effect size (generalized eta-squared), and a significance flag.
+        """
+        artool = importr('ARTool')  # Import ARTool package
+
+        with localconverter(R.default_converter + pandas2ri.converter):
+            # Convert Python DataFrame to R DataFrame
+            r_dataframe = R.conversion.py2rpy(dataframe)
+
+        # Ensure categorical variables are factors
+        try:
+            # Convert Perspective and Scene to factors in R
+            r_dataframe = r('''
+            function(df) {
+                df$Perspective <- as.factor(df$Perspective)
+                df$Scene <- as.factor(df$Scene)
+                return(df)
+            }
+            ''')(r_dataframe)
+        except Exception as e:
+            print(f"Error in converting variables to factors: {e}")
+            return None, False
+
+        # Define the formula for the ART model
+        formula = Formula(f'{target_variable} ~ Perspective * Scene + (1|ID)')
+
+        try:
+            # Fit the ART model
+            art_model = artool.art(formula, data=r_dataframe)
+            
+            # Perform ANOVA on the ART model
+            anova_results = artool.anova_art(art_model)
+
+            # Convert ANOVA results (R dataframe) to pandas DataFrame
+            with localconverter(R.default_converter + pandas2ri.converter):
+                anova_df = R.conversion.rpy2py(anova_results)
+
+            # Extract p-values from ANOVA results
+            if 'Pr(>F)' in anova_df.columns:
+                p_values = anova_df['Pr(>F)'].values
+            else:
+                raise KeyError("Expected 'Pr(>F)' column not found in ANOVA results")
+
+            # Select the specified p-value
+            selected_p_value = p_values[p_value_index]
+
+            # # Extract SS (Sum of Squares) values
+            # ss_effect = anova_df.loc[p_value_index, 'Sum Sq']
+            # ss_error = anova_df['Sum Sq'].iloc[-1]  # Assuming last row contains residuals
+            # ss_total = anova_df['Sum Sq'].sum()
+
+            # # Calculate generalized eta-squared (η²G)
+            # effect_size = ss_effect / (ss_total)
+
+            # Check if the selected p-value is significant
+            significant = selected_p_value < 0.05
+
+            return selected_p_value, significant
+
+        except Exception as e:
+            print(f"Error in ART fitting: {e}")
+            return None, None, False
+
+
+
 
 
     def sampling(self, dataframe, nb):

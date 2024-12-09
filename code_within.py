@@ -50,7 +50,6 @@ for parti in participant_counts:
             # GLMM
             p_emb, conf_emb = stats.test_GLMM(df_simu, target_variable='Awe_S', p_value_index=1)
 
-            # Wilcoxon
             paired_df = stats.prepare_paired_data(df_simu, columns_value='Perspective', index_value='Scene')
 
             # Wilcoxon効果量
@@ -61,15 +60,17 @@ for parti in participant_counts:
                 print(f"Experiment {i} (Participants: {parti}): Failed to prepare paired data for Wilcoxon test.")
                 continue
 
+            p_emb_ipq, conf_emb_ipq = stats.test_IPQ(df_simu, target_variable='Mean_IPQ', p_value_index=1)
+
             # 結果の書き込み
-            stats.writing(str(parti) + '_within_data_descriptions_' + str(exp) + '.csv', p_emb, conf_emb, effect_size)
+            stats.writing(str(parti) + '_within_data_descriptions_' + str(exp) + '.csv', p_emb, conf_emb, effect_size, p_emb_ipq, conf_emb_ipq)
 
         except Exception as e:
             print(f"Error in experiment {i} (Participants: {parti}): {e}")
 
     # 集計処理
     name = str(parti) + '_within_data_descriptions_'  + str(exp) + '.csv'
-    df_count = pd.read_csv(name, names=["nb_simu", "nb_parti", "p_value", "confo", "effect_size"])
+    df_count = pd.read_csv(name, names=["nb_simu", "nb_parti", "p_value", "confo", "effect_size", "p_value_ipq", "confo_ipq"])
 
     ef_size_moy = df_count.effect_size.mean()
     fifth_perc = np.percentile(df_count['effect_size'], 5)
@@ -82,8 +83,16 @@ for parti in participant_counts:
 
     pourcent = count * 100 / exp
 
+
+    count_ipq = 0
+    for i in range(0, exp - 1):
+        if (df_count.iat[i, 6] == True):
+            count_ipq += 1
+
+    pourcent_ipq = count_ipq * 100 / exp
+
     file_name = 'Pourcentage_Conforme_within.csv'
 
     with open(file_name, 'a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([parti, len(df_within), pourcent, ef_size_moy, fifth_perc, ninety_fifth_perc])
+        writer.writerow([parti, len(df_within), pourcent, ef_size_moy, fifth_perc, ninety_fifth_perc, pourcent_ipq])
