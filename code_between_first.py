@@ -11,25 +11,24 @@ import scipy as sp
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-from Stats_test_class import *
 import os
 
+## Get methods from ##
+from Stats_test_class import *
 
-# 引数の設定
-parser = argparse.ArgumentParser(description='Within')
-parser.add_argument('-p', help='participant start and increment', nargs=2)
-args = parser.parse_args()
-
-file_path = 'Questionnaire/Questionnaire_result.csv'
+parser = argparse.ArgumentParser(description='Between')
+parser.add_argument('-p', help = 'participant number - exp number', nargs=2)
+args = parser.parse_args() 
+file_path = 'Questionnaire/Questionnaire_result_between.csv'
 
 # ファイルが存在するか確認して読み込み
 if os.path.exists(file_path):
-    df_within = pd.read_csv(file_path)
+    df_between= pd.read_csv(file_path)
 
-start = int(args.p[0])  
-exp = int(args.p[1])  
+start = int(args.p[0])
+exp = int(args.p[1])
 
-# 処理を行う参加者数リストを作成
+
 participant_counts = list(range(start, 41, 5))  # 5刻みで41を超えない値まで
 if 41 not in participant_counts:
     participant_counts.append(41)  # 41を最後に追加
@@ -37,15 +36,13 @@ print(f"Participant counts to process: {participant_counts}")
 
 # 実験処理の実行
 for parti in participant_counts:
-    stats = Statistics(parti, exp, df_within)
-    stats.__init__(parti, exp, df_within)
+    stats = Statistics(parti, exp, df_between)
+    stats.__init__(parti, exp, df_between)
 
-    # 実験を実行
     for i in tqdm(range(1, exp), desc=f"Experiment Progress (Participants: {parti})"):
         try:
             # サンプリング
-            df_simu = stats.sampling(df_within, nb=parti).copy()
-
+            df_simu = stats.sampling(df_between, nb=parti).copy()
             df_simu['Scene'] = pd.Categorical(
                 df_simu['Scene'],
                 categories=['Corridor', 'Snow'],  
@@ -55,11 +52,11 @@ for parti in participant_counts:
             # GLMM
             p_emb, conf_emb = stats.test_GLMM(df_simu, target_variable='Awe_S', p_value_index=1)
 
-            paired_df = stats.prepare_paired_data(df_simu, columns_value='Perspective', index_value='Scene')
+            # paired_df = stats.prepare_paired_data(df_simu, columns_value='Perspective', index_value='Scene')
 
             # Wilcoxon効果量
-            if paired_df is not None:
-                z, p_value, effect_size = stats.wilcoxon_effect_size(paired_df)
+            if df_simu is not None:
+                z, p_value, effect_size = stats.wilcoxon_effect_size(df_simu)
                 print(f"Wilcoxon Test Results for Experiment {i} (Participants: {parti}): z={z}, p_value={p_emb}, effect_size={effect_size}")
             else:  
                 print(f"Experiment {i} (Participants: {parti}): Failed to prepare paired data for Wilcoxon test.")
@@ -68,13 +65,15 @@ for parti in participant_counts:
             p_emb_ipq, conf_emb_ipq = stats.test_IPQ(df_simu, target_variable='Mean_IPQ', p_value_index=1)
 
             # 結果の書き込み
-            stats.writing(str(parti) + '_within_data_descriptions_' + str(exp) + '.csv', p_emb, conf_emb, effect_size, p_emb_ipq, conf_emb_ipq)
+            stats.writing(str(parti) + '_between_data_descriptions_' + str(exp) + '.csv', p_emb, conf_emb, effect_size, p_emb_ipq, conf_emb_ipq)
 
         except Exception as e:
             print(f"Error in experiment {i} (Participants: {parti}): {e}")
 
+
+
     # 集計処理
-    name = str(parti) + '_within_data_descriptions_'  + str(exp) + '.csv'
+    name = str(parti) + '_between_data_descriptions_'  + str(exp) + '.csv'
     df_count = pd.read_csv(name, names=["nb_simu", "nb_parti", "p_value", "confo", "effect_size", "p_value_ipq", "confo_ipq"])
 
     ef_size_moy = df_count.effect_size.mean()
@@ -96,8 +95,9 @@ for parti in participant_counts:
 
     pourcent_ipq = count_ipq * 100 / exp
 
-    file_name = 'Pourcentage_Conforme_within.csv'
+    file_name = 'Pourcentage_Conforme_between.csv'
 
     with open(file_name, 'a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([parti, len(df_within), pourcent, ef_size_moy, fifth_perc, ninety_fifth_perc, pourcent_ipq])
+        writer.writerow([parti, len(df_between), pourcent, ef_size_moy, fifth_perc, ninety_fifth_perc, pourcent_ipq])
+
