@@ -293,3 +293,4 @@ class Statistics:
     def wilcox_ef_size(self, dataframe):
         ef_size = rstatix.wilcox_effsize(data = dataframe, formula = Formula('value ~ Condition'), paired = True)
         return(ef_size)
+
