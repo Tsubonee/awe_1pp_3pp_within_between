@@ -25,21 +25,21 @@ file_path = 'Questionnaire/Questionnaire_result_between.csv'
 if os.path.exists(file_path):
     df_between= pd.read_csv(file_path)
 
-start = int(args.p[0])
-exp = int(args.p[1])
+start = int(args.p[0]) #10
+exp = int(args.p[1]) #1000
 
 
-participant_counts = list(range(start, 41, 5))  # 5刻みで41を超えない値まで
+participant_counts = list(range(start, 41, 5))  # 10 - 41
 if 41 not in participant_counts:
     participant_counts.append(41)  # 41を最後に追加
 print(f"Participant counts to process: {participant_counts}") 
 
 # 実験処理の実行
-for parti in participant_counts:
+for parti in participant_counts: #10 - 41
     stats = Statistics(parti, exp, df_between)
     stats.__init__(parti, exp, df_between)
 
-    for i in tqdm(range(1, exp), desc=f"Experiment Progress (Participants: {parti})"):
+    for i in tqdm(range(1, exp+10), desc=f"Experiment Progress (Participants: {parti})"):
         try:
             # サンプリング
             df_simu = stats.sampling(df_between, nb=parti).copy()
@@ -81,7 +81,7 @@ for parti in participant_counts:
     ninety_fifth_perc = np.percentile(df_count['effect_size'], 95)
 
     count = 0
-    for i in range(0, exp - 1):
+    for i in range(0, exp - 1): 
         if (df_count.iat[i, 3] == True):
             count += 1
 
