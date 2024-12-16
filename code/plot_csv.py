@@ -4,9 +4,12 @@ import matplotlib.pyplot as plt
 # CSVファイルのパスを指定
 file_path = "Pourcentage_Conforme_within.csv"
 
+column_names = ["x", "col2", "y_within_3", "col4", "col5", "col6", "y_within_7"]
+
 # ファイルを読み込む
 try:
-    df_within = pd.read_csv(file_path)
+    df_within = pd.read_csv(file_path, header=None)
+    df_within.columns = column_names
     print("CSVファイルを正常に読み込みました。")
     print(df_within.head())  # データの最初の5行を表示
 except FileNotFoundError:
@@ -18,7 +21,8 @@ file_path = "Pourcentage_Conforme_between.csv"
 
 # ファイルを読み込む
 try:
-    df_between = pd.read_csv(file_path)
+    df_between = pd.read_csv(file_path, header=None)
+    df_between.columns = column_names
     print("CSVファイルを正常に読み込みました。")
     print(df_between.head())  # データの最初の5行を表示
 except FileNotFoundError:
@@ -34,22 +38,23 @@ x_between = df_between.iloc[:, 0]
 y_between_3 = df_between.iloc[:, 2]
 y_between_7 = df_between.iloc[:, 6]
 
-def plot_graph(x, y1, y2, title, filename):
+def plot_graph(x, y1, y2, title, filename, ylabel, xlabel):
     plt.figure(figsize=(10, 6))
     plt.plot(x, y1, marker='o', label="within")
     plt.plot(x, y2, marker='o', label="between")
-    plt.xlabel("Awe-S Score")
-    plt.ylabel("Participant number")
-    plt.ylim(0, 100)  # y軸を0から100に設定
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)
+    plt.ylim(-5, 105)  # y軸を0から100に設定
+    plt.xlim(5,45)
     plt.title(title)
     plt.legend()
     plt.grid()
     plt.savefig(filename, format='pdf')  # グラフをPDFで保存
     plt.show()
 
-plot_graph(x_within, y_within_3, y_between_3, "Awe-S Score(Perspective)", "Awe_Perspective.pdf")
+plot_graph(x_within, y_within_3, y_between_3, "Awe-S Score(Perspective)", "Awe_Perspective.pdf", "Awe-S Score Consistency [%]", "Participant number")
 
-plot_graph(x_between, y_within_7, y_between_7, "IPQ Score(Perspective)", "IPQ_Perspective.pdf")
+plot_graph(x_between, y_within_7, y_between_7, "IPQ Score(Perspective)", "IPQ_Perspective.pdf", "IPQ Score Consistency [%]", "Participant number")
 
 # Scene plot
 
@@ -58,7 +63,8 @@ file_path = "Pourcentage_Conforme_within_Scene.csv"
 
 # ファイルを読み込む
 try:
-    df_within = pd.read_csv(file_path)
+    df_within = pd.read_csv(file_path, header=None)
+    df_within.columns = column_names
     print("CSVファイルを正常に読み込みました。")
     print(df_within.head())  # データの最初の5行を表示
 except FileNotFoundError:
@@ -70,7 +76,8 @@ file_path = "Pourcentage_Conforme_between_Scene.csv"
 
 # ファイルを読み込む
 try:
-    df_between = pd.read_csv(file_path)
+    df_between = pd.read_csv(file_path, header=None)
+    df_between.columns = column_names
     print("CSVファイルを正常に読み込みました。")
     print(df_between.head())  # データの最初の5行を表示
 except FileNotFoundError:
@@ -86,21 +93,22 @@ x_between = df_between.iloc[:, 0]
 y_between_3 = df_between.iloc[:, 2]
 y_between_7 = df_between.iloc[:, 6]
 
-def plot_graph(x, y1, y2, title, filename):
+def plot_graph(x, y1, y2, title, filename, ylabel, xlabel):
     plt.figure(figsize=(10, 6))
     plt.plot(x, y1, marker='o', label="within")
     plt.plot(x, y2, marker='o', label="between")
-    plt.xlabel("Awe-S Score")
-    plt.ylabel("Participant number")
-    plt.ylim(0, 100)  # y軸を0から100に設定
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)
+    plt.ylim(-5, 105)  # y軸を0から100に設定
+    plt.xlim(5,45)
     plt.title(title)
     plt.legend()
     plt.grid()
     plt.savefig(filename, format='pdf')  # グラフをPDFで保存
     plt.show()
 
-plot_graph(x_within, y_within_3, y_between_3, "Awe-S Score(Scene)", "Awe_Scene.pdf")
+plot_graph(x_within, y_within_3, y_between_3, "Awe-S Score(Scene)", "Awe_Scene.pdf", "Awe-S Score Consistency [%]", "Participant number")
 
-plot_graph(x_between, y_within_7, y_between_7, "IPQ Score(Scene)", "IPQ_Scene.pdf")
+plot_graph(x_between, y_within_7, y_between_7, "IPQ Score(Scene)", "IPQ_Scene.pdf", "IPQ Score Consistency [%]", "Participant number")
 
 

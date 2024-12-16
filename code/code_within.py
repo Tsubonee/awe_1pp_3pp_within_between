@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser(description='Within')
 parser.add_argument('-p', help='participant start and increment', nargs=2)
 args = parser.parse_args()
 
-file_path = 'Questionnaire/Questionnaire_result.csv'
+file_path = '../Questionnaire/Questionnaire_result.csv'
 
 # ファイルが存在するか確認して読み込み
 if os.path.exists(file_path):
@@ -53,7 +53,7 @@ for parti in participant_counts:
             )
 
             # GLMM
-            p_emb, conf_emb = stats.test_GLMM(df_simu, target_variable='Awe_S', p_value_index=1)
+            p_emb, conf_emb = stats.test_GLMM(df_simu, target_variable='Awe_S', p_value_index=0)
 
             paired_df = stats.prepare_paired_data(df_simu, columns_value='Perspective', index_value='Scene')
 
@@ -118,7 +118,7 @@ for parti in participant_counts:
             )
 
             # GLMM
-            p_emb, conf_emb = stats.test_GLMM(df_simu, target_variable='Awe_S', p_value_index=2)
+            p_emb, conf_emb = stats.test_GLMM(df_simu, target_variable='Awe_S', p_value_index=1)
 
             paired_df = stats.prepare_paired_data(df_simu, columns_value='Scene', index_value='Perspective')
 

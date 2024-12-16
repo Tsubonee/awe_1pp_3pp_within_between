@@ -14,8 +14,8 @@ from rpy2.robjects import pandas2ri, Formula
 from rpy2.robjects.conversion import localconverter
 from rpy2.robjects import r
 pandas2ri.activate()
-rstatix = importr('rstatix', lib_loc='./r_packages/')
-bootES = importr('bootES', lib_loc='./r_packages/')
+rstatix = importr('rstatix', lib_loc='../r_packages/')
+bootES = importr('bootES', lib_loc='../r_packages/')
 
 
 gamma_family = r('Gamma(link="log")')
