@@ -19,7 +19,7 @@ from Stats_test_class import *
 parser = argparse.ArgumentParser(description='Between')
 parser.add_argument('-p', help = 'participant number - exp number', nargs=2)
 args = parser.parse_args() 
-file_path = 'Questionnaire/Questionnaire_result_between.csv'
+file_path = '../Questionnaire/Questionnaire_result_between.csv'
 
 # ファイルが存在するか確認して読み込み
 if os.path.exists(file_path):

@@ -53,7 +53,7 @@ for parti in participant_counts:
             )
 
             # GLMM
-            p_emb, conf_emb = stats.test_GLMM(df_simu, target_variable='Awe_S', p_value_index=0)
+            p_emb, conf_emb = stats.test_GLMM(df_simu, target_variable='Awe_S', p_value_index=1)
 
             paired_df = stats.prepare_paired_data(df_simu, columns_value='Perspective', index_value='Scene')
 
@@ -65,7 +65,7 @@ for parti in participant_counts:
                 print(f"Experiment {i} (Participants: {parti}): Failed to prepare paired data for Wilcoxon test.")
                 continue
 
-            p_emb_ipq, conf_emb_ipq = stats.test_IPQ(df_simu, target_variable='Mean_IPQ', p_value_index=1)
+            p_emb_ipq, conf_emb_ipq = stats.test_IPQ(df_simu, target_variable='Mean_IPQ', p_value_index=0)
 
             # 結果の書き込み
             stats.writing(str(parti) + '_within_data_descriptions_' + str(exp) + '.csv', p_emb, conf_emb, effect_size, p_emb_ipq, conf_emb_ipq)
@@ -118,7 +118,7 @@ for parti in participant_counts:
             )
 
             # GLMM
-            p_emb, conf_emb = stats.test_GLMM(df_simu, target_variable='Awe_S', p_value_index=1)
+            p_emb, conf_emb = stats.test_GLMM(df_simu, target_variable='Awe_S', p_value_index=2)
 
             paired_df = stats.prepare_paired_data(df_simu, columns_value='Scene', index_value='Perspective')
 
@@ -130,7 +130,7 @@ for parti in participant_counts:
                 print(f"Experiment {i} (Participants: {parti}): Failed to prepare paired data for Wilcoxon test.")
                 continue
 
-            p_emb_ipq, conf_emb_ipq = stats.test_IPQ(df_simu, target_variable='Mean_IPQ', p_value_index=2)
+            p_emb_ipq, conf_emb_ipq = stats.test_IPQ(df_simu, target_variable='Mean_IPQ', p_value_index=1)
 
             # 結果の書き込み
             stats.writing(str(parti) + '_within_data_descriptions_Scene_' + str(exp) + '.csv', p_emb, conf_emb, effect_size, p_emb_ipq, conf_emb_ipq)
